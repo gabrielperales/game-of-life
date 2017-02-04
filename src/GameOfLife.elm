@@ -17,7 +17,11 @@ type alias CellCoords =
 
 
 type alias Board =
-    Array Bool
+    Array Cell
+
+
+type alias Cell =
+    Bool
 
 
 
@@ -56,7 +60,7 @@ indexToCoords shape index =
         x =
             index % width
     in
-        ( x, y )
+        ( y, x )
 
 
 coordsToIndex : BoardShape -> CellCoords -> Int
@@ -65,46 +69,60 @@ coordsToIndex shape coords =
         width =
             shape |> Tuple.first
 
-        x =
-            coords |> Tuple.first
+        height =
+            shape |> Tuple.second
 
         y =
-            coords |> Tuple.second
+            coords
+                |> Tuple.first
+                |> \n ->
+                    if height > 0 then
+                        n % height
+                    else
+                        n
+
+        x =
+            coords
+                |> Tuple.second
+                |> \n ->
+                    if width > 0 then
+                        n % width
+                    else
+                        n
     in
-        y * width + x
+        (y * width + x)
 
 
+neighbors : CellCoords -> List CellCoords
+neighbors cellCoords =
+    [ ( -1, -1 )
+    , ( -1, 0 )
+    , ( -1, 1 )
+    , ( 0, -1 )
+    , ( 0, 1 )
+    , ( 1, -1 )
+    , ( 1, 0 )
+    , ( 1, 1 )
+    ]
+        |> List.map
+            (\t ->
+                ( (Tuple.first t) + (Tuple.first cellCoords)
+                , (Tuple.second t) + (Tuple.second cellCoords)
+                )
+            )
 
--- We need to get the neighbors of a given cellIndex
--- to do that, and because we store our cells inside a list,
--- we need to know the width of each row
+
+neighborsIndexes : BoardShape -> List CellCoords -> List Int
+neighborsIndexes shape coords =
+    List.map (coordsToIndex shape) coords
 
 
-neighbors : Model -> Int -> Int
-neighbors board cellIndex =
-    let
-        boardShape : BoardShape
-        boardShape =
-            .shape board
-
-        cellCoords : CellCoords
-        cellCoords =
-            indexToCoords boardShape cellIndex
-    in
-        [ ( -1, -1 )
-        , ( 0, -1 )
-        , ( 1, -1 )
-        , ( 0, -1 )
-        , ( 0, 1 )
-        , ( 1, -1 )
-        , ( 1, 0 )
-        , ( 1, 1 )
-        ]
-            |> List.map (\t -> ( (Tuple.first t) + (Tuple.first cellCoords), (Tuple.second t) + (Tuple.second cellCoords) ))
-            |> List.map (coordsToIndex (.shape board))
-            |> List.filterMap ((flip Array.get) (.cells board))
-            |> List.filter ((==) True)
-            |> List.length
+neighborsAlive : Board -> List Int -> Int
+neighborsAlive board indexes =
+    indexes
+        |> List.filterMap (\i -> Array.get i board)
+        |> List.filter ((==) True)
+        |> List.length
 
 
 isAlive : Bool -> Int -> Bool
@@ -139,11 +157,20 @@ lifeCycle board =
 
         boardCells =
             .cells board
-                |> Array.indexedMap (\index cell -> isAlive cell (neighbors board index))
+
+        nextCells =
+            boardCells
+                |> Array.indexedMap
+                    (\index cell ->
+                        index
+                            |> indexToCoords boardShape
+                            |> neighbors
+                            |> neighborsIndexes boardShape
+                            |> neighborsAlive boardCells
+                            |> isAlive cell
+                    )
     in
-        { shape = boardShape
-        , cells = boardCells
-        }
+        { board | cells = nextCells }
 
 
 
@@ -170,7 +197,7 @@ view model =
     in
         cells
             |> Array.toList
-            |> List.map (\c -> [ input [ type_ "checkbox", checked c ] [] ])
+            |> List.indexedMap (\i c -> [ input [ id ("cell-" ++ toString i), type_ "checkbox", checked c ] [] ])
             |> List.map (td [])
             |> split width
             |> List.map (tr [])
