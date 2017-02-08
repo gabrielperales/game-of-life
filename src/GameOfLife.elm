@@ -8,6 +8,15 @@ import List
 import Random
 
 
+main : Program Never Model Msg
+main =
+    Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
+
+
+
+-- TYPES DEFINITION
+
+
 type alias BoardShape =
     ( Int, Int )
 
@@ -32,6 +41,10 @@ type alias Model =
     { shape : BoardShape
     , cells : Board
     }
+
+
+
+-- HELPER FUNCTIONS
 
 
 empty : BoardShape -> Model
@@ -216,8 +229,3 @@ subscriptions model =
 init : ( Model, Cmd Msg )
 init =
     ( empty ( 20, 20 ), Random.generate Init (Random.map (Array.fromList) (Random.list 400 Random.bool)) )
-
-
-main : Program Never Model Msg
-main =
-    Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
