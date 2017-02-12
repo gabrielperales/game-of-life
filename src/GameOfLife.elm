@@ -6,11 +6,32 @@ import Time exposing (..)
 import Array exposing (Array)
 import List
 import Random
+import BeautifulExample
+import Color
 
 
 main : Program Never Model Msg
 main =
-    Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
+    Html.program
+        { view =
+            view
+                >> BeautifulExample.view
+                    { title = "Game of Life"
+                    , details =
+                        Just
+                            """
+                      Check the code and tests out in the Github repository.
+                      Open a issue to help me doing improvements and documentation.
+                    """
+                    , color = Just Color.blue
+                    , maxWidth = 478
+                    , githubUrl = Just "https://github.com/gabrielperales/game-of-life"
+                    , documentationUrl = Nothing
+                    }
+        , init = init
+        , update = update
+        , subscriptions = subscriptions
+        }
 
 
 
