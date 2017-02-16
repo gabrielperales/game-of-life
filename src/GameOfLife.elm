@@ -2,6 +2,7 @@ module GameOfLife exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Time exposing (..)
 import Array exposing (Array)
 import List
@@ -61,6 +62,7 @@ type alias Cell =
 type alias Model =
     { shape : BoardShape
     , cells : Board
+    , paused : Bool
     }
 
 
@@ -79,6 +81,7 @@ empty shape =
     in
         { cells = cells
         , shape = shape
+        , paused = True
         }
 
 
@@ -171,16 +174,39 @@ isAlive alive neighbors =
 type Msg
     = Update
     | Init Board
+    | SwitchCell Int
+    | SwitchPlay
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Update ->
-            ( lifeCycle model, Cmd.none )
+            if (not <| .paused <| model) then
+                ( lifeCycle model, Cmd.none )
+            else
+                ( model, Cmd.none )
 
         Init cells ->
             ( { model | cells = cells }, Cmd.none )
+
+        SwitchCell cellIndex ->
+            let
+                cells =
+                    model
+                        |> .cells
+                        |> Array.indexedMap
+                            (\i cell ->
+                                if (i /= cellIndex) then
+                                    cell
+                                else
+                                    not cell
+                            )
+            in
+                ( { model | cells = cells }, Cmd.none )
+
+        SwitchPlay ->
+            ( { model | paused = not model.paused }, Cmd.none )
 
 
 lifeCycle : Model -> Model
@@ -229,13 +255,23 @@ view model =
                 listHead ->
                     listHead :: split i (List.drop i list)
     in
-        cells
-            |> Array.toList
-            |> List.indexedMap (\i c -> [ input [ id ("cell-" ++ toString i), type_ "checkbox", checked c ] [] ])
-            |> List.map (td [])
-            |> split width
-            |> List.map (tr [])
-            |> table []
+        div []
+            [ cells
+                |> Array.toList
+                |> List.indexedMap (\i c -> [ input [ id ("cell-" ++ toString i), type_ "checkbox", checked c, onClick (SwitchCell i) ] [] ])
+                |> List.map (td [])
+                |> split width
+                |> List.map (tr [])
+                |> table []
+            , button [ onClick SwitchPlay ]
+                [ text
+                    (if model.paused then
+                        "Play"
+                     else
+                        "Pause"
+                    )
+                ]
+            ]
 
 
 

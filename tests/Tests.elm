@@ -190,6 +190,7 @@ all =
                         initialModel =
                             { shape = ( 5, 5 )
                             , cells = initialCells
+                            , paused = False
                             }
 
                         expectedCells =
