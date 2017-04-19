@@ -1,0 +1,24 @@
+{
+  "name": "gameOfLife",
+  "version": "1.0.0",
+  "description": "![Conway's Game Of Life](.github/images/game-of-life.png)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "elm-make src/GameOfLife.elm --output bundle.js",
+    "test": "elm-test tests/Main.elm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabrielperales/game-of-life.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gabrielperales/game-of-life/issues"
+  },
+  "homepage": "https://github.com/gabrielperales/game-of-life#readme"
+}
